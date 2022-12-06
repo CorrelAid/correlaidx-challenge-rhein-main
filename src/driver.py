@@ -1,12 +1,9 @@
-import yaml
 from neo4j import GraphDatabase, basic_auth
-
-with open("neo4j.yaml", "r") as yamlfile:
-    cfg = yaml.load(yamlfile)
+from neo4jconfig import neo4j_config as cfg
 
 uri = cfg["uri"]
 user = cfg["user"]
-password = cfg["passwd"]
+password = cfg["password"]
 db = cfg["db"]
 
 
