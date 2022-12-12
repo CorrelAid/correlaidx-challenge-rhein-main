@@ -1,4 +1,4 @@
-from neo4j import GraphDatabase, basic_auth
+from neo4j import GraphDatabase
 from neo4jconfig import neo4j_config as cfg
 
 uri = cfg["uri"]
@@ -18,6 +18,7 @@ class Driver:
             self.__uri,
             auth=(self.__user, self.__password)
         )
+        self.driver.verify_connectivity()
 
     def close(self):
         if self.driver:
