@@ -8,6 +8,8 @@ from argparse import ArgumentParser
 from driver import driver
 from edits import edits1, edits2
 
+STOP_TERMS = set(['gruppe', 'group', 'bank', 'gmbh', 'ag'])
+
 def parse_query_result(query_res, search_term: str):
 	parsed_query_res = {}
 
@@ -37,14 +39,27 @@ def contains_lower_name(**params) -> List[Dict[str, str]]:
 	RETURN n
 	"""
 	name = params.get('name')
-	outfile = params.get('outfile')
 	if name:
 		name = name.lower()
+		if name in STOP_TERMS:
+			return
 		print(f"Looking for '{name}' on the database, wait a moment...")
 		values = driver.do_cypher_tx(cypher, name=name)
 		out_format_values = out_format(values, search_term=name) 
 		return out_format_values
 	raise ValueError("You shold pass the param 'name'")
+
+def contains_lower_name_and_splits(**params) -> List[Dict[str, str]]:
+	all_values = []
+
+	name = params.get('name')
+	name_parts = name.split()
+	for part in set([name] + name_parts):
+		if len(part) > 2:
+			out_format_values = contains_lower_name(name=part)
+			if out_format_values:
+				all_values.extend(out_format_values)
+	return all_values
 
 def contains_lower_with_edits_name(**params) -> List[Dict[str, str]]:
 	all_values = []
@@ -56,7 +71,8 @@ def contains_lower_with_edits_name(**params) -> List[Dict[str, str]]:
 	for edit in product(*edits):
 		name = " ".join(edit)
 		out_format_values = contains_lower_name(name=name)
-		all_values.extend(out_format_values)
+		if out_format_values:
+			all_values.extend(out_format_values)
 	return all_values
 
 def contains_lower_address(**params) -> List[Dict[str, str]]:
@@ -79,7 +95,8 @@ def _queryobjtype2func_arg(query_object_type: str):
 	dict_ = {
 		'address': (contains_lower_address, 'address'),
 		'name': (contains_lower_name, 'name'),
-		'name_edits': (contains_lower_with_edits_name, 'name')
+		'name_edits': (contains_lower_with_edits_name, 'name'),
+		'name_splits': (contains_lower_name_and_splits, 'name')
 	}
 	func_arg = dict_.get(query_object_type)
 	if not func_arg:
@@ -130,6 +147,10 @@ if __name__ == "__main__":
 		},
 		'contains_lower_with_edits_name': {
 			'func': contains_lower_with_edits_name,
+			'args': ['name', 'outfile']
+		},
+		'contains_lower_name_and_splits': {
+			'func': contains_lower_name_and_splits,
 			'args': ['name', 'outfile']
 		},
 		'contains_lower_from_txt': {
