@@ -17,7 +17,7 @@ def parse_query_result(query_res, search_term: str):
 		parsed_query_res['search_term'] = search_term
 		parsed_query_res['id'] = str(query_res[0].element_id)
 		parsed_query_res['labels'] = ', '.join(query_res[0].labels)
-		parsed_query_res['properties'] = str(query_res[0]._properties)
+		parsed_query_res['properties'] = query_res[0]._properties
 
 	return parsed_query_res
 
